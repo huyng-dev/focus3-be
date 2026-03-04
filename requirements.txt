@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pgvector
+pydantic>=2.0
+pydantic-settings
+python-dotenv
+feedparser
+apscheduler
+alembic
+pytest
+httpx
