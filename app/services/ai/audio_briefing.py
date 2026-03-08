@@ -80,13 +80,23 @@ def generate_daily_briefing(db: Session, region: str = "vn") -> Optional[AudioBr
         """
         
         logger.info("Calling OpenRouter for script generation...")
-        response = openrouter_client.chat.completions.create(
-            model="google/gemma-3-27b-it",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.4
-        )
+        try:
+            response = openrouter_client.chat.completions.create(
+                model="google/gemma-3-27b-it:free",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.4
+            )
+        except Exception as primary_err:
+            logger.warning(f"Primary model failed: {primary_err}. Falling back to google/gemma-3-12b-it:free")
+            response = openrouter_client.chat.completions.create(
+                model="google/gemma-3-12b-it:free",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.4
+            )
         
         script_text = response.choices[0].message.content.strip()
         if not script_text:

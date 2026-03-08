@@ -124,19 +124,40 @@ def summarize_top_articles(db: Session):
                     Description: {desc_text}
                     """
                     
-                    response = openrouter_client.chat.completions.create(
-                        model="google/gemma-3-27b-it",
-                        messages=[
-                            {"role": "system", "content": f"You are a helpful AI news editor that strictly outputs valid JSON. Return ONLY a JSON object in this format: {{\"summary\": [\"Point 1\", \"Point 2\", \"Point 3\"]}}. All content inside the JSON values must be written in {target_lang_name}."},
-                            {"role": "user", "content": prompt}
-                        ],
-                        response_format={"type": "json_object"},
-                        temperature=0.2
-                    )
+                    system_instruction_text = f"You are a helpful AI news editor that strictly outputs valid JSON. Return ONLY a JSON object in this format: {{\"summary\": [\"Point 1\", \"Point 2\", \"Point 3\"]}}. All content inside the JSON values must be written in {target_lang_name}."
+                    combined_prompt = f"{system_instruction_text}\n\n{prompt}"
                     
-                    content = response.choices[0].message.content
+                    try:
+                        response = openrouter_client.chat.completions.create(
+                            model="google/gemma-3-27b-it:free",
+                            messages=[
+                                {"role": "user", "content": combined_prompt}
+                            ],
+                            temperature=0.2
+                        )
+                    except Exception as primary_err:
+                        logger.warning(f"Primary model failed: {primary_err}. Falling back to google/gemma-3-12b-it:free")
+                        response = openrouter_client.chat.completions.create(
+                            model="google/gemma-3-12b-it:free",
+                            messages=[
+                                {"role": "user", "content": combined_prompt}
+                            ],
+                            temperature=0.2
+                        )
+                    
+                    content = response.choices[0].message.content.strip()
                     if not content:
                         raise ValueError("Received empty content from OpenRouter")
+                    
+                    # Clean potential markdown wrapping around JSON output before parsing
+                    if content.startswith("```json"):
+                        content = content[7:]
+                    if content.startswith("```"):
+                        content = content[3:]
+                    if content.endswith("```"):
+                        content = content[:-3]
+                    
+                    content = content.strip()
                     
                     # Parse the JSON and update the ai_summary JSONB column
                     ai_summary_dict = json.loads(content)
