@@ -1,17 +1,21 @@
 from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyHttpUrl, PostgresDsn, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Focus3"
     API_V1_STR: str = "/api/v1"
     
     # Database
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "focus3_admin"
-    POSTGRES_PASSWORD: str = "focus3_secret_password"
-    POSTGRES_DB: str = "focus3_core"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_SERVER: str = os.getenv("DB_HOST")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB")
+    POSTGRES_PORT: int = os.getenv("DB_PORT")
     SQLALCHEMY_DATABASE_URI: Optional[Union[PostgresDsn, str]] = None
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
@@ -32,6 +36,7 @@ class Settings(BaseSettings):
     # AI & Integration Keys
     OPENAI_API_KEY: Optional[str] = None
     ELEVENLABS_API_KEY: Optional[str] = None
+    OPENROUTER_API_KEY: Optional[str] = None
     
     # Scraper Settings
     SCRAPER_INTERVAL_MINUTES: int = 15

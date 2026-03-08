@@ -11,3 +11,5 @@ apscheduler
 alembic
 pytest
 httpx
+openai
+sentence-transformers

@@ -14,6 +14,10 @@ class Source(Base):
     trust_score = Column(Float, default=1.0)
     slant = Column(String(50), default="neutral")
     is_active = Column(Boolean, default=True)
+
+    # New fields for multi-region support
+    region = Column(String(50), server_default="vn", nullable=False)
+    language = Column(String(10), server_default="vi", nullable=False)
     
     articles = relationship("Article", back_populates="source")
 
@@ -32,6 +36,8 @@ class Article(Base):
     category_id = Column(Integer, ForeignKey("categories.id"))
     
     title = Column(String(500), nullable=False)
+    # Description of the article
+    description = Column(Text, nullable=True)
     original_url = Column(Text, unique=True, nullable=False)
     thumbnail_url = Column(Text)
     published_at = Column(DateTime(timezone=True), nullable=False)
@@ -46,3 +52,12 @@ class Article(Base):
 
     source = relationship("Source", back_populates="articles")
     category = relationship("Category", back_populates="articles")
+
+class AudioBriefing(Base):
+    __tablename__ = "audio_briefings"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    audio_url = Column(String(512), nullable=False)
+    duration_seconds = Column(Integer, default=0)
+    region = Column(String(50), server_default="vn", nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
